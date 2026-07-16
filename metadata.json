@@ -1,0 +1,6 @@
+{
+  "name": "Josh Chicken Nansana",
+  "description": "The online home of Josh Chicken Nansana, the fast-growing takeaway powerhouse and home of the famous TikTok-viral Lusaniya platter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
