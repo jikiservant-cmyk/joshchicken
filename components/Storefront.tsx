@@ -44,8 +44,16 @@ export const formatPrice = (value: number) => {
   return `Shs ${value.toLocaleString()}`;
 };
 
+const HERO_IMAGES = [
+  'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=1600&h=900&q=80', // Platter / Crispy Chicken
+  'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=1600&h=900&q=80', // Fried Chicken Legs
+  'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&w=1600&h=900&q=80', // Bucket of crunchy chicken
+  'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=1600&h=900&q=80'  // Crispy Chicken with fries
+];
+
 export default function Storefront({ initialProducts }: { initialProducts: Product[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,6 +65,13 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -275,11 +290,17 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
       {/* WhatsApp Merchant Settings Modal */}
       <AnimatePresence>
         {showConfig && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          >
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="bg-white rounded-none p-8 max-w-sm w-full shadow-2xl border border-neutral-100"
             >
               <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center text-neutral-900 mb-4">
@@ -323,7 +344,7 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                 </button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -358,37 +379,78 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
 
       {/* Squarespace FoodHub Intro Banner */}
       <section className="relative w-full h-[320px] md:h-[420px] overflow-hidden bg-neutral-900 flex items-center justify-center">
-        <Image
-          src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=1600&h=900&q=80"
-          alt="Josh Chicken Nansana Gourmet Crispy Fried Chicken Banner"
-          fill
-          className="object-cover opacity-60 object-center"
-          priority
-          referrerPolicy="no-referrer"
-        />
+        <div className="absolute inset-0">
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.div
+              key={currentHeroIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 w-full h-full"
+            >
+              <Image
+                src={HERO_IMAGES[currentHeroIndex]}
+                alt="Josh Chicken Nansana Gourmet Crispy Fried Chicken Banner"
+                fill
+                className="object-cover object-center"
+                priority
+                referrerPolicy="no-referrer"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 pointer-events-none"></div>
-        <div className="relative text-center max-w-2xl px-6 space-y-4 z-10">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-[#e5a93b] font-black bg-[#221d18]/80 px-3.5 py-1.5 rounded-full border border-[#e5a93b]/20">
-            📍 Ku Masitowa, Nansana (Hoima Road)
-          </span>
+        
+        {/* Slideshow dots indicator */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {HERO_IMAGES.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentHeroIndex(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none ${
+                currentHeroIndex === index 
+                  ? 'bg-[#e5a93b] w-6' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="relative text-center max-w-2xl px-6 space-y-4 z-10"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#e5a93b] font-black bg-[#221d18]/80 px-3.5 py-1.5 rounded-full border border-[#e5a93b]/20">
+              📍 Ku Masitowa, Nansana (Hoima Road)
+            </span>
+          </motion.div>
           <p className="text-xs md:text-base text-neutral-100 tracking-wide font-light max-w-lg mx-auto leading-relaxed">
             {"\"Good Food, Good Mood!\" Home of the legendary "} <strong className="text-white font-semibold">TikTok-Viral Lusaniya Platter</strong>. {"Fast takeaway & dispatch station built for elite local flavors and high-volume delivery."}
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <a 
               href="#menu-hub" 
-              className="px-6 py-3 bg-[#e5a93b] hover:bg-[#c02424] text-[#1a1612] hover:text-[#fafafa] font-heading font-bold text-xs uppercase tracking-widest transition-all duration-200"
+              className="px-6 py-3 bg-[#e5a93b] hover:bg-[#c02424] text-[#1a1612] hover:text-[#fafafa] font-heading font-bold text-xs uppercase tracking-widest transition-all duration-200 hover:-translate-y-1"
             >
               Explore Menu
             </a>
             <a 
               href="tel:+256754673529" 
-              className="px-6 py-3 border border-white hover:bg-white hover:text-[#1a1612] text-white font-heading font-bold text-xs uppercase tracking-widest transition-all duration-200"
+              className="px-6 py-3 border border-white hover:bg-white hover:text-[#1a1612] text-white font-heading font-bold text-xs uppercase tracking-widest transition-all duration-200 hover:-translate-y-1"
             >
               Call to Order
             </a>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Category Tabs Styled with FoodHub Circular Image Selectors */}
@@ -396,11 +458,26 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 mb-6 font-bold">Select Eatery Category</p>
           
-          <div className="flex justify-center items-center gap-6 md:gap-10 overflow-x-auto no-scrollbar pb-2">
-            {CATEGORY_META.map((cat) => {
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.15 }}
+            variants={{
+              visible: { transition: { staggerChildren: 0.1 } },
+              hidden: {}
+            }}
+            className="flex justify-center items-center gap-6 md:gap-10 overflow-x-auto no-scrollbar pb-2"
+          >
+            {CATEGORY_META.map((cat, i) => {
               const isActive = activeCategory === cat.name;
               return (
-                <button
+                <motion.button
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   key={cat.name}
                   onClick={() => setActiveCategory(cat.name)}
                   className="flex flex-col items-center gap-3 shrink-0 focus:outline-none group"
@@ -423,10 +500,10 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                   }`}>
                     {cat.name}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -434,14 +511,19 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
       <main id="menu-hub" className="flex-1 container mx-auto px-6 py-16 max-w-6xl">
         
         {/* Menu Section Title with Double Thin Lines (Squarespace Aesthetic) */}
-        <div className="text-center max-w-md mx-auto mb-16 space-y-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          className="text-center max-w-md mx-auto mb-16 space-y-2"
+        >
           <div className="w-12 h-[1px] bg-red-600 mx-auto"></div>
           <h3 className="font-heading text-2xl md:text-3xl font-black text-neutral-900 tracking-widest uppercase">
             {activeCategory} SELECTION
           </h3>
           <p className="text-xs text-neutral-400 tracking-wider">Premium brined golden recipe, made fresh daily</p>
           <div className="w-12 h-[1px] bg-red-600 mx-auto pt-1"></div>
-        </div>
+        </motion.div>
 
         {/* Product Cards Grid */}
         <AnimatePresence mode="popLayout">
@@ -449,6 +531,7 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="text-center py-20 bg-white rounded-none border border-neutral-100 p-8"
             >
               <div className="w-12 h-12 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 text-neutral-300">
@@ -466,6 +549,13 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
           ) : (
             <motion.div 
               layout
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.15 }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.1 } },
+                hidden: {}
+              }}
               className="grid grid-cols-1 md:grid-cols-2 gap-12"
             >
               {filteredProducts.map((product) => {
@@ -475,6 +565,10 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                   <motion.div
                     key={product.id}
                     layoutId={`prod-card-${product.id}`}
+                    variants={{
+                      hidden: { opacity: 0, y: 30 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+                    }}
                     className="flex flex-col sm:flex-row gap-6 bg-white p-5 border border-neutral-100 hover:border-neutral-200 transition-all duration-300 group"
                   >
                     {/* Left: Product Image */}
@@ -530,9 +624,14 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
       </main>
 
       {/* TikTok Viral Corner & Delivery Zone Estimator */}
-      <section className="bg-neutral-100 border-t border-b border-neutral-200 py-16">
+      <section className="bg-neutral-100 border-t border-b border-neutral-200 py-16 overflow-hidden">
         <div className="container mx-auto px-6 max-w-6xl">
-          <div className="text-center max-w-xl mx-auto mb-12 space-y-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            className="text-center max-w-xl mx-auto mb-12 space-y-3"
+          >
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#e5a93b] font-black bg-neutral-900 px-3 py-1 rounded">
               🎬 TikTok Viral Help Corner
             </span>
@@ -542,12 +641,18 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
             <p className="text-xs text-neutral-500 leading-relaxed font-light">
               {"We've seen your TikTok comments! Here are instant answers to our most popular questions, plus an interactive delivery fee estimator."}
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
             {/* Left Column: Interactive Delivery Zone Fee Estimator */}
-            <div className="lg:col-span-5 bg-white border border-neutral-200 p-6 md:p-8 shadow-sm">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="lg:col-span-5 bg-white border border-neutral-200 p-6 md:p-8 shadow-sm"
+            >
               <h4 className="font-heading text-xs font-black uppercase tracking-wider text-neutral-950 mb-1 flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping inline-block"></span>
                 Delivery Fee & Time Estimator
@@ -594,13 +699,28 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                   💡 <strong>Tip:</strong> This delivery fee is automatically applied to your checkout subtotal when you place an order in the <em>My Basket</em> panel.
                 </p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Right Column: TikTok comment FAQs */}
-            <div className="lg:col-span-7 space-y-4">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } },
+                hidden: {}
+              }}
+              className="lg:col-span-7 space-y-4"
+            >
               
               {/* FAQ 1 */}
-              <div className="bg-white border border-neutral-200 p-5">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, x: 30 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } }
+                }}
+                className="bg-white border border-neutral-200 p-5"
+              >
                 <div className="flex gap-3 items-start">
                   <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-0.5 font-mono rounded shrink-0">@User</span>
                   <div>
@@ -610,10 +730,16 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* FAQ 2 */}
-              <div className="bg-white border border-neutral-200 p-5">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, x: 30 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } }
+                }}
+                className="bg-white border border-neutral-200 p-5"
+              >
                 <div className="flex gap-3 items-start">
                   <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-0.5 font-mono rounded shrink-0">@User</span>
                   <div>
@@ -623,10 +749,16 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* FAQ 3 */}
-              <div className="bg-white border border-neutral-200 p-5">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, x: 30 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } }
+                }}
+                className="bg-white border border-neutral-200 p-5"
+              >
                 <div className="flex gap-3 items-start">
                   <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-0.5 font-mono rounded shrink-0">@User</span>
                   <div>
@@ -636,33 +768,54 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-            </div>
+            </motion.div>
 
           </div>
         </div>
       </section>
 
       {/* Squarespace-inspired Footer with exact typography */}
-      <footer className="bg-[#202124] text-neutral-400 py-20 border-t border-neutral-900">
-        <div className="container mx-auto px-6 max-w-6xl grid grid-cols-1 md:grid-cols-12 gap-12 text-left">
+      <footer className="bg-[#202124] text-neutral-400 py-20 border-t border-neutral-900 overflow-hidden">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={{
+            visible: { transition: { staggerChildren: 0.15 } },
+            hidden: {}
+          }}
+          className="container mx-auto px-6 max-w-6xl grid grid-cols-1 md:grid-cols-12 gap-12 text-left"
+        >
           
           {/* Column 1: Opening Hours */}
-          <div className="md:col-span-5 space-y-4">
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+            }}
+            className="md:col-span-5 space-y-4"
+          >
             <h1 className="text-[#FAFAFA] font-heading text-3xl font-extrabold uppercase tracking-widest">Open Daily</h1>
             <div className="space-y-2 text-xs md:text-sm tracking-wide text-neutral-300 leading-relaxed font-light">
               <p className="text-[#e5a93b] font-bold uppercase tracking-wider">Josh Chicken Nansana</p>
               <p>11:00 AM – 11:00 PM Monday to Sunday</p>
               <p className="text-neutral-500 pt-2 italic">{"\"Good Food, Good Mood!\" Serving Ku Masitowa & surrounding Kampala neighborhoods."}</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Column 2: Spacer */}
           <div className="hidden md:block md:col-span-2"></div>
 
           {/* Column 3: Contact details */}
-          <div className="md:col-span-5 space-y-4">
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+            }}
+            className="md:col-span-5 space-y-4"
+          >
             <h4 className="text-[#FAFAFA] font-heading text-xl font-bold uppercase tracking-wider">Ku Masitowa</h4>
             <div className="space-y-2 text-xs md:text-sm tracking-wide text-neutral-300 font-light">
               <p>Nansana (Hoima Road), Kampala,</p>
@@ -673,8 +826,8 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                 <a href="tel:+256788398459" className="block text-[#e5a93b] hover:underline font-mono font-bold">0788 398 459 (MTN Dispatch)</a>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         <div className="container mx-auto px-6 max-w-6xl mt-16 pt-8 border-t border-neutral-800/40 text-center text-[10px] font-mono text-neutral-600 uppercase tracking-widest">
           © {new Date().getFullYear()} Josh Chicken Nansana. All Rights Reserved. Delivered with high-speed dispatch.
@@ -684,11 +837,17 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
       {/* Gourmet Customizer Modal Dialog */}
       <AnimatePresence>
         {selectedProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="bg-white rounded-none overflow-hidden max-w-lg w-full shadow-2xl border border-neutral-200 flex flex-col max-h-[85vh]"
             >
               {/* Cover Image Header */}
@@ -817,7 +976,7 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                 </button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -879,69 +1038,81 @@ export default function Storefront({ initialProducts }: { initialProducts: Produ
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Selections</h4>
                       
-                      {cart.map((item) => {
-                        const unitTotal = item.product.price + item.addedPrice;
-                        return (
-                          <div key={item.id} className="flex gap-4 p-4 rounded-none bg-[#FAFAFA] border border-neutral-200/50">
-                            <div className="relative w-16 h-16 bg-neutral-100 shrink-0 border border-neutral-200">
-                              <Image
-                                src={item.product.image}
-                                alt={item.product.name}
-                                fill
-                                className="object-cover"
-                                sizes="64px"
-                              />
-                            </div>
-                            
-                            <div className="flex-1 flex flex-col justify-center min-w-0">
-                              <h5 className="font-heading font-bold text-neutral-900 truncate leading-snug text-xs uppercase tracking-wider">{item.product.name}</h5>
-                              
-                              {/* Selection Choice Metadata Badge tags */}
-                              {(item.spiciness || (item.extras && item.extras.length > 0)) && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {item.spiciness && (
-                                    <span className="text-[8px] font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded-none border border-red-100">
-                                      {item.spiciness}
-                                    </span>
-                                  )}
-                                  {item.extras?.map(e => (
-                                    <span key={e.name} className="text-[8px] font-medium bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded-none border border-neutral-200">
-                                      +{e.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-
-                              <p className="font-mono font-bold text-red-600 text-xs mt-1.5">{formatPrice(unitTotal * item.quantity)}</p>
-                              
-                              <div className="flex items-center justify-between mt-3">
-                                <div className="flex items-center bg-white border border-neutral-200 rounded-none p-0.5">
-                                  <button
-                                    onClick={() => updateQuantity(item.id, -1)}
-                                    className="w-5 h-5 flex items-center justify-center text-neutral-600 hover:text-neutral-950 transition-all rounded"
-                                  >
-                                    <Minus size={10} />
-                                  </button>
-                                  <span className="w-6 text-center text-xs font-mono font-bold text-neutral-800">{item.quantity}</span>
-                                  <button
-                                    onClick={() => updateQuantity(item.id, 1)}
-                                    className="w-5 h-5 flex items-center justify-center text-neutral-600 hover:text-neutral-950 transition-all rounded"
-                                  >
-                                    <Plus size={10} />
-                                  </button>
+                      <div className="space-y-4">
+                        <AnimatePresence mode="popLayout">
+                          {cart.map((item) => {
+                            const unitTotal = item.product.price + item.addedPrice;
+                            return (
+                              <motion.div 
+                                key={item.id} 
+                                layout
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex gap-4 p-4 rounded-none bg-[#FAFAFA] border border-neutral-200/50"
+                              >
+                                <div className="relative w-16 h-16 bg-neutral-100 shrink-0 border border-neutral-200">
+                                  <Image
+                                    src={item.product.image}
+                                    alt={item.product.name}
+                                    fill
+                                    className="object-cover"
+                                    sizes="64px"
+                                  />
                                 </div>
                                 
-                                <button
-                                  onClick={() => removeFromCart(item.id)}
-                                  className="text-[10px] font-bold text-red-600 hover:text-red-700 hover:underline flex items-center gap-0.5 transition-colors"
-                                >
-                                  <Trash2 size={11} /> Remove
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                                <div className="flex-1 flex flex-col justify-center min-w-0">
+                                  <h5 className="font-heading font-bold text-neutral-900 truncate leading-snug text-xs uppercase tracking-wider">{item.product.name}</h5>
+                                  
+                                  {/* Selection Choice Metadata Badge tags */}
+                                  {(item.spiciness || (item.extras && item.extras.length > 0)) && (
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {item.spiciness && (
+                                        <span className="text-[8px] font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded-none border border-red-100">
+                                          {item.spiciness}
+                                        </span>
+                                      )}
+                                      {item.extras?.map(e => (
+                                        <span key={e.name} className="text-[8px] font-medium bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded-none border border-neutral-200">
+                                          +{e.name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  <p className="font-mono font-bold text-red-600 text-xs mt-1.5">{formatPrice(unitTotal * item.quantity)}</p>
+                                  
+                                  <div className="flex items-center justify-between mt-3">
+                                    <div className="flex items-center bg-white border border-neutral-200 rounded-none p-0.5">
+                                      <button
+                                        onClick={() => updateQuantity(item.id, -1)}
+                                        className="w-5 h-5 flex items-center justify-center text-neutral-600 hover:text-neutral-950 transition-all rounded"
+                                      >
+                                        <Minus size={10} />
+                                      </button>
+                                      <span className="w-6 text-center text-xs font-mono font-bold text-neutral-800">{item.quantity}</span>
+                                      <button
+                                        onClick={() => updateQuantity(item.id, 1)}
+                                        className="w-5 h-5 flex items-center justify-center text-neutral-600 hover:text-neutral-950 transition-all rounded"
+                                      >
+                                        <Plus size={10} />
+                                      </button>
+                                    </div>
+                                    
+                                    <button
+                                      onClick={() => removeFromCart(item.id)}
+                                      className="text-[10px] font-bold text-red-600 hover:text-red-700 hover:underline flex items-center gap-0.5 transition-colors"
+                                    >
+                                      <Trash2 size={11} /> Remove
+                                    </button>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                      </div>
                     </div>
 
                     {/* Customer Info Form */}
